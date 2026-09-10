@@ -1,8 +1,10 @@
 (ns code_explanation_gen.core
   (:require [babashka.cli :as cli]
             [babashka.fs :as fs]
+            [clojure.spec.alpha :as s]
             [clojure.string :as str]
-            [cheshire.core :as json]))
+            [cheshire.core :as json]
+            [code-explanation-gen.specs :as specs]))
 
 (def cli-spec
   {:dir {:desc "Directory to scan" :default "." :alias :d}
@@ -14,10 +16,22 @@
   [args]
   (cli/parse-opts args {:spec cli-spec}))
 
+(s/fdef parse-args
+  :args (s/cat :args (s/nilable ::specs/argv))
+  :ret ::specs/opts
+  :fn specs/opts-from-args?)
+
 (defn banner
   "The one-line status message -main prints for parsed opts (pure)."
   [{:keys [dir format]}]
   (clojure.core/format "code-explanation-gen: scanning %s (format: %s)" dir format))
+
+(s/fdef banner
+  :args (s/cat :opts ::specs/opts)
+  :ret string?
+  :fn (fn [{{:keys [opts]} :args ret :ret}]
+        (and (str/includes? ret (:dir opts))
+             (str/includes? ret (:format opts)))))
 
 (defn -main [& args]
   (let [opts (parse-args args)]
@@ -29,6 +43,9 @@
     ;; TODO: implement scanning logic
     (println (banner opts))
     (println "Not yet implemented — see CLAUDE.md for build order")))
+
+(s/fdef -main
+  :args (s/* string?))
 
 (when (= *file* (System/getProperty "babashka.file"))
   (apply -main *command-line-args*))

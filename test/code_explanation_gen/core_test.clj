@@ -1,7 +1,12 @@
 (ns code-explanation-gen.core-test
-  (:require [clojure.string :as str]
-            [clojure.test :refer [deftest is testing]]
+  (:require [clojure.spec.test.alpha :as stest]
+            [clojure.string :as str]
+            [clojure.test :refer [deftest is testing use-fixtures]]
             [code_explanation_gen.core :as sut]))
+
+;; Exercise every s/fdef :args spec while the unit tests run.
+(use-fixtures :once
+  (fn [f] (stest/instrument) (try (f) (finally (stest/unstrument)))))
 
 (deftest cli-spec-shape
   (testing "every option documents itself"
