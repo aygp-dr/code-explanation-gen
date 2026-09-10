@@ -13,15 +13,24 @@
 (def ^:private side-effecting
   #{`sut/-main})
 
-;; TODO(spec): (parse-args ["--dir" "0"]) => {:dir 0 :format "text"}.
-;; babashka.cli auto-coerces numeric-looking values, so a directory named
-;; 0 or 2024 arrives as a long and ::specs/dir fails.
+;; TODO(spec): babashka.cli drops the options that follow a repeated one.
+;;   JVM, cli 0.8.61: (parse-args ["--format" "." "--format" "." "--dir" "src"])
+;;                    => {:dir "." :format "."}
+;;   bb built-in cli: (parse-args ["--help" "--help" "--dir" "src"])
+;;                    => {:dir "." :format "text" :help true}
+;; Upstream behaviour, not this repo's code. parse-args stays out of the
+;; blanket check and is checked below on argv that repeats no option.
 (def ^:private known-failing
   #{`sut/parse-args})
 
 (defn- checkable []
   (remove (into side-effecting known-failing)
           (stest/enumerate-namespace 'code_explanation_gen.core)))
+
+(deftest parse-args-holds-without-repeated-options
+  (let [[r] (stest/check `sut/parse-args
+                         (assoc check-opts :gen {::specs/argv specs/gen-argv-no-repeats}))]
+    (is (nil? (:failure r)) (pr-str (stest/abbrev-result r)))))
 
 (deftest fdefs-hold-under-generative-testing
   (let [results (stest/check (checkable) check-opts)]

@@ -44,6 +44,19 @@
     #(gen/fmap (fn [opts] (vec (apply concat opts)))
                (gen/vector (gen/one-of (vec (vals (option-gens)))) 0 5))))
 
+(defn gen-argv-no-repeats
+  "An ::argv generator in which no option appears twice. babashka.cli drops
+  the options that follow a repeated one (see the TODO(spec) on parse-args
+  in specs_test)."
+  []
+  (let [option-gen (option-gens)]
+    (gen/bind (gen/tuple (gen/shuffle (keys option-gen)) (gen/choose 0 3))
+              (fn [[kinds n]]
+                (if (zero? n)
+                  (gen/return [])
+                  (gen/fmap (fn [opts] (vec (apply concat opts)))
+                            (apply gen/tuple (map option-gen (take n kinds)))))))))
+
 (defn- flag-values [args flags]
   (->> (partition 2 1 args)
        (filter (comp flags first))

@@ -7,8 +7,8 @@
             [code-explanation-gen.specs :as specs]))
 
 (def cli-spec
-  {:dir {:desc "Directory to scan" :default "." :alias :d}
-   :format {:desc "Output format: text, json, edn" :default "text" :alias :f}
+  {:dir {:desc "Directory to scan" :default "." :alias :d :coerce :string}
+   :format {:desc "Output format: text, json, edn" :default "text" :alias :f :coerce :string}
    :help {:desc "Show help" :alias :h :coerce :boolean}})
 
 (defn parse-args

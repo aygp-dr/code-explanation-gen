@@ -33,6 +33,11 @@
   (is (true? (:help (sut/parse-args ["-h"]))))
   (is (nil? (:help (sut/parse-args ["--dir" "src"])))))
 
+(deftest parse-args-keeps-numeric-values-as-strings
+  (is (= "0" (:dir (sut/parse-args ["--dir" "0"]))))
+  (is (= "2024" (:dir (sut/parse-args ["-d" "2024"]))))
+  (is (= "1" (:format (sut/parse-args ["--format" "1"])))))
+
 (deftest banner-names-dir-and-format
   (is (= "code-explanation-gen: scanning ./my-project (format: json)"
          (sut/banner {:dir "./my-project" :format "json"}))))
